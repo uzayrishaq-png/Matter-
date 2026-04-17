@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Matter Codes" />
+    <title>Matter Code Vault</title>
+    <script>
+      // SPA redirect companion to public/404.html — unpacks deep links
+      // that GitHub Pages can't serve directly.
+      (function () {
+        var l = window.location;
+        if (l.search && l.search.indexOf("?/") === 0) {
+          var decoded = l.search
+            .slice(2)
+            .split("&")
+            .map(function (s) { return s.replace(/~and~/g, "&"); });
+          var path = "/" + decoded[0];
+          var query = decoded.slice(1).join("&");
+          window.history.replaceState(
+            null,
+            "",
+            l.pathname.slice(0, -1) + path + (query ? "?" + query : "") + l.hash
+          );
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

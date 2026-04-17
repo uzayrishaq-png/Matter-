@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Matter Code Vault</title>
+    <script>
+      // Single-Page-App redirect for GitHub Pages.
+      // Converts /Matter-/device/123?x=1  →  /Matter-/?/device/123&x=1
+      // which index.html unpacks into the real URL on load.
+      (function () {
+        var segmentCount = 1; // strip "/Matter-" from the path before encoding.
+        var l = window.location;
+        l.replace(
+          l.protocol +
+            "//" +
+            l.hostname +
+            (l.port ? ":" + l.port : "") +
+            l.pathname
+              .split("/")
+              .slice(0, 1 + segmentCount)
+              .join("/") +
+            "/?/" +
+            l.pathname
+              .slice(1)
+              .split("/")
+              .slice(segmentCount)
+              .join("/")
+              .replace(/&/g, "~and~") +
+            (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+            l.hash
+        );
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
