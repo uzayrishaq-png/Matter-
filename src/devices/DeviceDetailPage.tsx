@@ -87,16 +87,21 @@ export function DeviceDetailPage() {
         </p>
       )}
 
-      {device.qr_payload ? (
+      {(device.qr_payload || device.manual_code) ? (
         <div className="flex flex-col items-center mb-6">
-          <QrDisplay value={device.qr_payload} size={256} />
+          <QrDisplay
+            value={device.qr_payload || device.manual_code!}
+            size={256}
+          />
           <p className="mt-2 text-xs text-slate-500 break-all font-mono text-center max-w-full">
-            {device.qr_payload}
+            {device.qr_payload
+              ? device.qr_payload
+              : `QR generated from manual code: ${device.manual_code}`}
           </p>
         </div>
       ) : (
         <p className="mb-6 text-slate-500 text-sm">
-          No QR payload saved for this device.
+          No QR payload or manual code saved for this device.
         </p>
       )}
 
