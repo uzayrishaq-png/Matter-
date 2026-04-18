@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { DeviceDraft } from "../types";
 import { QrScanner } from "../components/QrScanner";
+import { BleScanner, useBleSupported, type BleResult } from "../components/BleScanner";
 import {
   createDevice,
   getDevice,
@@ -30,6 +31,22 @@ export function DeviceFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
+  const bleSupported = useBleSupported();
+
+  async function handleBleResult(result: BleResult) {
+    setLookingUp(true);
+    try {
+      const info = await lookupDevice(result.vendorId, result.productId);
+      setDraft((d) => ({
+        ...d,
+        manufacturer: info.vendorName || d.manufacturer,
+        model: info.productName || d.model,
+        name: d.name || info.productName || "",
+      }));
+    } finally {
+      setLookingUp(false);
+    }
+  }
 
   useEffect(() => {
     if (!editing) return;
@@ -142,6 +159,10 @@ export function DeviceFormPage() {
         >
           Scan Matter QR
         </button>
+
+        {bleSupported && (
+          <BleScanner onResult={(r) => void handleBleResult(r)} />
+        )}
 
         {lookingUp && (
           <p className="text-sm text-indigo-400 animate-pulse">
