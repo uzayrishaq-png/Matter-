@@ -7,7 +7,9 @@ import {
   getDevice,
   updateDevice,
 } from "./useDevices";
-import { extractManualCode, isMatterQrPayload } from "./matterPayload";
+import { isMatterQrPayload } from "./matterPayload";
+import { decodeMatterQr, passcodeToManualCode } from "./matterDecode";
+import { lookupDevice } from "./dclLookup";
 
 const EMPTY: DeviceDraft = {
   name: "",
@@ -27,6 +29,7 @@ export function DeviceFormPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   useEffect(() => {
     if (!editing) return;
@@ -53,15 +56,37 @@ export function DeviceFormPage() {
     setDraft((d) => ({ ...d, [key]: value }));
   }
 
-  function handleScanResult(text: string) {
+  async function handleScanResult(text: string) {
     setScanning(false);
-    if (isMatterQrPayload(text)) {
-      set("qr_payload", text.trim());
-    }
-    const manual = extractManualCode(text);
-    if (manual) set("manual_code", manual);
-    if (!isMatterQrPayload(text) && !manual) {
-      set("qr_payload", text.trim());
+    const trimmed = text.trim();
+
+    if (isMatterQrPayload(trimmed)) {
+      setDraft((d) => ({ ...d, qr_payload: trimmed }));
+
+      const decoded = decodeMatterQr(trimmed);
+      if (decoded) {
+        const manualCode = passcodeToManualCode(
+          decoded.passcode,
+          decoded.discriminator,
+          decoded.vendorId !== 0,
+        );
+        setDraft((d) => ({ ...d, manual_code: manualCode }));
+
+        setLookingUp(true);
+        try {
+          const info = await lookupDevice(decoded.vendorId, decoded.productId);
+          setDraft((d) => ({
+            ...d,
+            manufacturer: info.vendorName || d.manufacturer,
+            model: info.productName || d.model,
+            name: d.name || info.productName || "",
+          }));
+        } finally {
+          setLookingUp(false);
+        }
+      }
+    } else {
+      setDraft((d) => ({ ...d, qr_payload: trimmed }));
     }
   }
 
@@ -117,6 +142,12 @@ export function DeviceFormPage() {
         >
           Scan Matter QR
         </button>
+
+        {lookingUp && (
+          <p className="text-sm text-indigo-400 animate-pulse">
+            Looking up device info…
+          </p>
+        )}
 
         <Field label="Name" required>
           <input
